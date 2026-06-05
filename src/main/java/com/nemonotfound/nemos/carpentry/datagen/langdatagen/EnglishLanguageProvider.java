@@ -361,6 +361,12 @@ public class EnglishLanguageProvider extends FabricLanguageProvider {
         translationBuilder.add(CarpentryBlocks.SPRUCE_CHAIR_GREGORY, "Spruce Chair \"Gregory\"");
         translationBuilder.add(CarpentryBlocks.WARPED_CHAIR_GREGORY, "Warped Chair \"Gregory\"");
 
+        translationBuilder.add("jei.nemos-carpentry.category.carpentry", "Carpenter's Workbench");
+        translationBuilder.add("itemGroup.nemos-carpentry.nemos_carpentry", "Nemo's Carpentry");
+        translationBuilder.add("itemGroup.nemos-carpentry.seats", "Seats");
+        translationBuilder.add("itemGroup.nemos-carpentry.tables", "Tables");
+        translationBuilder.add("itemGroup.nemos-carpentry.outdoor", "Outdoor");
+
         try {
             Optional<Path> optionalPath = dataOutput.getModContainer().findPath("en_us.json");
 

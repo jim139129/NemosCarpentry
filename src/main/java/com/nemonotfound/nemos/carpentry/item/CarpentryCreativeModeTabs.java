@@ -30,7 +30,7 @@ public class CarpentryCreativeModeTabs {
     private static void registerNemosCarpentryItemGroup(Item iconItem) {
         CreativeModeTab ITEM_GROUP = FabricItemGroup.builder()
                 .icon(() -> new ItemStack(iconItem))
-                .title(Component.literal("Nemo's Carpentry"))
+                .title(Component.translatable("itemGroup.nemos-carpentry.nemos_carpentry"))
                 .displayItems((context, entries) -> {
                     entries.accept(CarpentryItems.CARPENTERS_WORKBENCH);
                     entries.accept(CarpentryItems.ACACIA_LADDER);
@@ -670,11 +670,10 @@ public class CarpentryCreativeModeTabs {
         Registry.register(BuiltInRegistries.CREATIVE_MODE_TAB, Identifier.fromNamespaceAndPath(MOD_ID, NEMOS_CARPENTRY_GROUP_ID), ITEM_GROUP);
     }
 
-    //TODO: Add translation
     private static void registerSeatsItemGroup(Item iconItem) {
         CreativeModeTab ITEM_GROUP = FabricItemGroup.builder()
                 .icon(() -> new ItemStack(iconItem))
-                .title(Component.translatable("Seats"))
+                .title(Component.translatable("itemGroup.nemos-carpentry.seats"))
                 .displayItems((context, entries) -> {
                     entries.accept(CarpentryItems.ACACIA_CHAIR);
                     entries.accept(CarpentryItems.BAMBOO_CHAIR);
@@ -1037,11 +1036,10 @@ public class CarpentryCreativeModeTabs {
         Registry.register(BuiltInRegistries.CREATIVE_MODE_TAB, Identifier.fromNamespaceAndPath(MOD_ID, NEMOS_CARPENTRY_GROUP_ID + "_seats"), ITEM_GROUP);
     }
 
-    //TODO: add translation
     private static void registerTablesItemGroup(Item iconItem) {
         CreativeModeTab ITEM_GROUP = FabricItemGroup.builder()
                 .icon(() -> new ItemStack(iconItem))
-                .title(Component.translatable("Tables"))
+                .title(Component.translatable("itemGroup.nemos-carpentry.tables"))
                 .displayItems((context, entries) -> {
                     entries.accept(CarpentryItems.ACACIA_TABLE_THE_CLASSIC);
                     entries.accept(CarpentryItems.BAMBOO_TABLE_THE_CLASSIC);
@@ -1097,11 +1095,10 @@ public class CarpentryCreativeModeTabs {
         Registry.register(BuiltInRegistries.CREATIVE_MODE_TAB, Identifier.fromNamespaceAndPath(MOD_ID, NEMOS_CARPENTRY_GROUP_ID + "_tables"), ITEM_GROUP);
     }
 
-    //TODO: add translation
     private static void registerOutdoorItemGroup(Item iconItem) {
         CreativeModeTab ITEM_GROUP = FabricItemGroup.builder()
                 .icon(() -> new ItemStack(iconItem))
-                .title(Component.translatable("Outdoor"))
+                .title(Component.translatable("itemGroup.nemos-carpentry.outdoor"))
                 .displayItems((context, entries) -> {
                     entries.accept(CarpentryItems.ACACIA_LADDER);
                     entries.accept(CarpentryItems.BAMBOO_LADDER);

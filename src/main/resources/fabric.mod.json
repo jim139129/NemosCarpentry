@@ -22,6 +22,9 @@
 		],
 		"client": [
           "com.nemonotfound.nemos.carpentry.NemosCarpentryClient"
+		],
+		"jei_mod_plugin": [
+          "com.nemonotfound.nemos.carpentry.jei.NemosCarpentryJeiPlugin"
 		]
 	},
 	"mixins": [
@@ -36,7 +39,7 @@
 		"fabric-api": "*"
 	},
 	"suggests": {
-		"another-mod": "*"
+		"jei": "*"
 	},
 	"accessWidener": "nemos-carpentry.accesswidener"
 }

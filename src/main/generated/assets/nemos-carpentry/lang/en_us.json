@@ -631,5 +631,10 @@
   "item.nemos-carpentry.pale_oak_glass_door_frame": "Pale Oak Glass Door Frame",
   "item.nemos-carpentry.spruce_glass_door_frame": "Spruce Glass Door Frame",
   "item.nemos-carpentry.warped_glass_door_frame": "Warped Glass Door Frame",
+  "jei.nemos-carpentry.category.carpentry": "Carpenter's Workbench",
+  "itemGroup.nemos-carpentry.nemos_carpentry": "Nemo's Carpentry",
+  "itemGroup.nemos-carpentry.outdoor": "Outdoor",
+  "itemGroup.nemos-carpentry.seats": "Seats",
+  "itemGroup.nemos-carpentry.tables": "Tables",
   "nemos-carpentry.container.carpenters_workbench": "Carpenter's Workbench"
 }

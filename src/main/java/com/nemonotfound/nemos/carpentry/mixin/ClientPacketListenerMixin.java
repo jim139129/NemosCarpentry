@@ -36,5 +36,15 @@ public abstract class ClientPacketListenerMixin extends ClientCommonPacketListen
         Minecraft minecraft = ((MinecraftGetter) this).nemo_sCarpentry$getMinecraft();
         PacketUtils.ensureRunningOnSameThread(packet, this, minecraft.packetProcessor());
         this.modRecipeManager = new ClientCarpentryRecipeManager(packet.carpentryRecipes());
+        nemo_sCarpentry$syncJeiRecipes(packet.carpentryRecipes());
+    }
+
+    @Unique
+    private static void nemo_sCarpentry$syncJeiRecipes(CarpentryRecipeDisplay.Grouping grouping) {
+        try {
+            Class<?> pluginClass = Class.forName("com.nemonotfound.nemos.carpentry.jei.NemosCarpentryJeiPlugin");
+            pluginClass.getMethod("onCarpentryRecipesSynced", CarpentryRecipeDisplay.Grouping.class).invoke(null, grouping);
+        } catch (ReflectiveOperationException | LinkageError ignored) {
+        }
     }
 }
