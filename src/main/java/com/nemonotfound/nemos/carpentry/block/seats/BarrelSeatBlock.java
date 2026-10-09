@@ -1,7 +1,6 @@
 package com.nemonotfound.nemos.carpentry.block.seats;
 
 
-import com.mojang.serialization.MapCodec;
 import com.nemonotfound.nemos.carpentry.block.seats.parents.SitableBlock;
 import net.minecraft.core.Direction;
 import net.minecraft.world.level.block.Block;
@@ -16,7 +15,6 @@ import java.util.stream.Stream;
 
 public class BarrelSeatBlock extends SitableBlock implements SimpleWaterloggedBlock {
 
-    public static final MapCodec<BarrelSeatBlock> CODEC = simpleCodec(BarrelSeatBlock::new);
 
     private static final VoxelShape NORTH_SHAPE = Shapes.join(Stream.of(
             Stream.of(
@@ -274,8 +272,4 @@ public class BarrelSeatBlock extends SitableBlock implements SimpleWaterloggedBl
                 .setValue(WATERLOGGED, false));
     }
 
-    @Override
-    protected @NotNull MapCodec<? extends HorizontalDirectionalBlock> codec() {
-        return CODEC;
-    }
 }

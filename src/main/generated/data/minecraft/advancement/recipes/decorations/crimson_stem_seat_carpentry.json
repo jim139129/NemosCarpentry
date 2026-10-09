@@ -13,7 +13,7 @@
     },
     "has_the_recipe": {
       "conditions": {
-        "recipe": "minecraft:crimson_stem_seat_carpentry"
+        "recipes": "minecraft:crimson_stem_seat_carpentry"
       },
       "trigger": "minecraft:recipe_unlocked"
     }

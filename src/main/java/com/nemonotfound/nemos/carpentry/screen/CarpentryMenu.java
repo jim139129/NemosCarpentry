@@ -1,357 +1,302 @@
 package com.nemonotfound.nemos.carpentry.screen;
 
 import com.nemonotfound.nemos.carpentry.block.CarpentryBlocks;
-import com.nemonotfound.nemos.carpentry.interfaces.CarpentryRecipeGetter;
-import com.nemonotfound.nemos.carpentry.interfaces.CarpentryRecipeManagerGetter;
 import com.nemonotfound.nemos.carpentry.recipe.CarpentryRecipe;
+import com.nemonotfound.nemos.carpentry.recipe.CarpentryRecipeInput;
+import com.nemonotfound.nemos.carpentry.recipe.CarpentryRecipeService;
 import com.nemonotfound.nemos.carpentry.recipe.display.CarpentryRecipeDisplay;
-import net.minecraft.core.Holder;
+import net.minecraft.resources.Identifier;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
+import net.minecraft.util.Prediction;
 import net.minecraft.world.Container;
 import net.minecraft.world.SimpleContainer;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.*;
-import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.item.crafting.Ingredient;
 import net.minecraft.world.item.crafting.RecipeHolder;
-import net.minecraft.world.item.crafting.SingleRecipeInput;
 import net.minecraft.world.level.Level;
-import org.jetbrains.annotations.NotNull;
 
 import java.util.List;
-import java.util.Optional;
 
 import static com.nemonotfound.nemos.carpentry.screen.CarpentryMenuTypes.CARPENTRY_SCREEN_HANDLER;
 
 public class CarpentryMenu extends AbstractContainerMenu {
-
-    private final ContainerLevelAccess containerLevelAccess;
+    private final ContainerLevelAccess access;
     private final Level level;
     private final DataSlot selectedRecipeIndex = DataSlot.standalone();
-    private ItemStack inputStack = ItemStack.EMPTY;
-    private ItemStack secondInputStack = ItemStack.EMPTY;
     private CarpentryRecipeDisplay.Grouping availableRecipes = CarpentryRecipeDisplay.Grouping.empty();
-    long lastTakeTime;
-    final Slot inputSlotOne;
-    final Slot inputSlotTwo;
-    final Slot outputSlot;
-    Runnable slotUpdateListener = () -> {};
+    private Identifier selectedId;
+    private boolean consuming;
+    private long lastTakeTime;
+    private Runnable slotUpdateListener = () -> {};
     public final Container input = new SimpleContainer(2) {
-
         @Override
         public void setChanged() {
             super.setChanged();
-            CarpentryMenu.this.slotsChanged(this);
-            CarpentryMenu.this.slotUpdateListener.run();
+            if (!consuming) {
+                CarpentryMenu.this.slotsChanged(this);
+            }
         }
     };
-    final ResultContainer output = new ResultContainer();
+    private final ResultContainer output = new ResultContainer();
+    private final Slot outputSlot;
 
-    public CarpentryMenu(int syncId, Inventory playerInventory) {
-        this(syncId, playerInventory, ContainerLevelAccess.NULL);
+    public CarpentryMenu(int syncId, Inventory inventory) {
+        this(syncId, inventory, ContainerLevelAccess.NULL);
     }
 
-    public CarpentryMenu(int syncId, Inventory playerInventory, final ContainerLevelAccess access) {
+    public CarpentryMenu(int syncId, Inventory inventory, ContainerLevelAccess access) {
         super(CARPENTRY_SCREEN_HANDLER, syncId);
-        this.level = playerInventory.player.level();
-        this.containerLevelAccess = access;
-
-        inputSlotOne = this.addSlot(new Slot(input, 0, 20, 19));
-        inputSlotTwo = this.addSlot(new Slot(input, 1, 20, 47));
-        outputSlot = this.addSlot(new Slot(output, 1, 143, 33) {
-
+        this.level = inventory.player.level();
+        this.access = access;
+        selectedRecipeIndex.set(-1);
+        addSlot(new Slot(input, 0, 20, 19));
+        addSlot(new Slot(input, 1, 20, 47));
+        outputSlot = addSlot(new Slot(output, 0, 143, 33) {
             @Override
-            public boolean mayPlace(@NotNull ItemStack stack) {
+            public boolean mayPlace(ItemStack stack) {
                 return false;
             }
 
             @Override
-            public void onTake(@NotNull Player player, @NotNull ItemStack stack) {
+            public boolean mayPickup(Player player) {
+                if (level.isClientSide()) {
+                    return canCraftSelectedRecipe();
+                }
+                return selectedServerRecipe() != null;
+            }
+
+            @Override
+            public void onTake(Player player, ItemStack stack) {
+                var holder = selectedServerRecipe();
+                if (holder == null) {
+                    setupResultSlot();
+                    return;
+                }
+                var recipe = holder.value();
                 stack.onCraftedBy(player, stack.getCount());
-                CarpentryMenu.this.output.awardUsedRecipes(player, this.getInputStacks());
-                var recipeGroupEntry = availableRecipes.entries().get(selectedRecipeIndex.get());
-
-                takeStacksOfIngredients(recipeGroupEntry.inputCounts());
-
-                access.execute((level, pos) -> {
-                    var l = level.getGameTime();
-                    if (CarpentryMenu.this.lastTakeTime != l) {
-                        level.playSound(null, pos, SoundEvents.UI_STONECUTTER_TAKE_RESULT,
-                                SoundSource.BLOCKS, 1.0f, 1.0f);
-                        CarpentryMenu.this.lastTakeTime = l;
+                output.awardUsedRecipes(player, List.of(input.getItem(0).copy(), input.getItem(1).copy()));
+                // Avoid re-entrant selection changes halfway through consuming two materials.
+                consuming = true;
+                try {
+                    for (int slot = 0; slot < recipe.inputCounts().size(); slot++) {
+                        input.removeItem(slot, recipe.inputCounts().get(slot));
+                    }
+                } finally {
+                    consuming = false;
+                }
+                slotsChanged(input);
+                access.execute((world, pos) -> {
+                    long time = world.getGameTime();
+                    if (lastTakeTime != time) {
+                        world.playSound(null, pos, SoundEvents.UI_STONECUTTER_TAKE_RESULT, SoundSource.BLOCKS, 1, 1);
+                        lastTakeTime = time;
                     }
                 });
-
                 super.onTake(player, stack);
             }
-
-            private void takeStacksOfIngredients(List<Integer> inputCounts) {
-                int firstIngredientCount = inputCounts.get(0);
-                ItemStack itemStack = CarpentryMenu.this.inputSlotOne.remove(firstIngredientCount);
-
-                if (inputCounts.size() > 1) {
-                    int secondIngredientCount = inputCounts.get(1);
-                    CarpentryMenu.this.inputSlotTwo.remove(secondIngredientCount);
-                }
-
-                if (!itemStack.isEmpty()) {
-                    CarpentryMenu.this.setupResultSlot(CarpentryMenu.this.selectedRecipeIndex.get());
-                }
-            }
-
-            private List<ItemStack> getInputStacks() {
-                return List.of(CarpentryMenu.this.inputSlotOne.getItem(), CarpentryMenu.this.inputSlotTwo.getItem());
-            }
         });
-
-        addPlayerInventory(playerInventory);
-        addPlayerHotbar(playerInventory);
-        this.addDataSlot(this.selectedRecipeIndex);
+        for (int row = 0; row < 3; row++) {
+            for (int column = 0; column < 9; column++) {
+                addSlot(new Slot(inventory, column + row * 9 + 9, 8 + column * 18, 84 + row * 18));
+            }
+        }
+        for (int column = 0; column < 9; column++) {
+            addSlot(new Slot(inventory, column, 8 + column * 18, 142));
+        }
+        addDataSlot(selectedRecipeIndex);
+        refreshRecipes();
     }
 
-    //TODO: REFACTOR
     @Override
-    public @NotNull ItemStack quickMoveStack(@NotNull Player player, int slotIndex) {
-        ItemStack itemStack = ItemStack.EMPTY;
-        Slot movingSlot = this.slots.get(slotIndex);
-
-        if (movingSlot.hasItem()) {
-            ItemStack movingItemStack = movingSlot.getItem();
-            Item item = movingItemStack.getItem();
-            itemStack = movingItemStack.copy();
-
-            if (slotIndex == 2) {
-                item.onCraftedBy(movingItemStack, player);
-
-                if (!this.moveItemStackTo(movingItemStack, 3, 39, true)) {
-                    return ItemStack.EMPTY;
-                }
-                movingSlot.onQuickCraft(movingItemStack, itemStack);
-            }
-            if (slotIndex == 0 || slotIndex == 1) {
-                if (!this.moveItemStackTo(movingItemStack, 3, 39, false)) {
-                    return ItemStack.EMPTY;
-                }
-            }
-
-            //TODO: REFACTOR
-            if (!getCarpentryRecipesForItemStack(this.slots.get(0).getItem()).isEmpty() && isMovingItemSecondIngredient(this.slots.get(0).getItem(), movingItemStack)) {
-                if (!this.moveItemStackTo(movingItemStack, 1, 2, false)) {
-                    return ItemStack.EMPTY;
-                } //TODO:REFACTOR
-            } else if ((!getCarpentryRecipesForItemStack(movingItemStack).isEmpty() ? !this.moveItemStackTo(movingItemStack, 0, 1, false) :
-                    (slotIndex >= 3 && slotIndex < 30 ? !this.moveItemStackTo(movingItemStack, 30, 39, false) :
-                            slotIndex >= 30 && slotIndex < 39 && !this.moveItemStackTo(movingItemStack, 3, 30, false)))) {
+    public ItemStack quickMoveStack(Player player, int index) {
+        if (index < 0 || index >= slots.size()) {
+            return ItemStack.EMPTY;
+        }
+        Slot slot = slots.get(index);
+        if (!slot.hasItem() || !slot.mayPickup(player)) {
+            return ItemStack.EMPTY;
+        }
+        ItemStack moving = slot.getItem();
+        ItemStack original = moving.copy();
+        if (index == 2) {
+            if (!moveItemStackTo(moving, 3, 39, true)) {
                 return ItemStack.EMPTY;
             }
-
-            if (movingItemStack.isEmpty()) {
-                movingSlot.set(ItemStack.EMPTY);
-            }
-            movingSlot.setChanged();
-            if (movingItemStack.getCount() == itemStack.getCount()) {
+            slot.onQuickCraft(moving, original);
+        } else if (index < 2) {
+            if (!moveItemStackTo(moving, 3, 39, false)) {
                 return ItemStack.EMPTY;
             }
-            movingSlot.onTake(player, itemStack);
-            this.broadcastChanges();
-        }
-        return itemStack;
-    }
-    
-    private boolean isMovingItemSecondIngredient(ItemStack firstIngredient, ItemStack secondIngredient) {
-        CarpentryRecipeDisplay.Grouping carpentryRecipes = getCarpentryRecipesForItemStack(firstIngredient);
-
-        return carpentryRecipes.entries().stream().anyMatch(recipe ->
-                isItemSecondIngredient(recipe.ingredients(), secondIngredient));
-    }
-
-    private CarpentryRecipeDisplay.Grouping getCarpentryRecipesForItemStack(ItemStack itemStack) {
-        CarpentryRecipeDisplay.Grouping carpentryRecipes = CarpentryRecipeDisplay.Grouping.empty();
-
-        if (!this.level.isClientSide()) {
-            carpentryRecipes = ((CarpentryRecipeGetter) this.level.recipeAccess()).nemo_sCarpentry$getCarpentryRecipes().filter(itemStack);
-        } else if (this.level.isClientSide()) {
-            carpentryRecipes = ((CarpentryRecipeManagerGetter) this.level).nemo_sCarpentry$getModRecipeManager().carpentryRecipes().filter(itemStack);
-        }
-
-        return carpentryRecipes;
-    }
-
-    private boolean isItemSecondIngredient(List<Ingredient> ingredients, ItemStack secondIngredient) {
-        return ingredients.size() == 2 && itemIsInMatchingStacks(ingredients.get(1).items().toList(), secondIngredient.getItem());
-    }
-
-    @Override
-    public boolean stillValid(@NotNull Player player) {
-        return CarpentryMenu.stillValid(containerLevelAccess, player, CarpentryBlocks.CARPENTERS_WORKBENCH);
-    }
-
-    @Override
-    public boolean canTakeItemForPickAll(@NotNull ItemStack stack, Slot slot) {
-        return slot.container != this.output && super.canTakeItemForPickAll(stack, slot);
-    }
-
-    @Override
-    public boolean clickMenuButton(@NotNull Player player, int index) {
-        if (this.isInBounds(index)) {
-            if (canCraftRecipe(index)) {
-                this.selectedRecipeIndex.set(index);
-            } else {
-                this.selectedRecipeIndex.set(-1);
+        } else if (isSecondIngredient(moving)) {
+            if (!moveItemStackTo(moving, 1, 2, false)) {
+                return ItemStack.EMPTY;
             }
-            this.setupResultSlot(index);
+        } else if (!CarpentryRecipeService.getRecipes(level).filter(moving).isEmpty()) {
+            if (!moveItemStackTo(moving, 0, 1, false)) {
+                return ItemStack.EMPTY;
+            }
+        } else if (index < 30) {
+            if (!moveItemStackTo(moving, 30, 39, false)) {
+                return ItemStack.EMPTY;
+            }
+        } else if (!moveItemStackTo(moving, 3, 30, false)) {
+            return ItemStack.EMPTY;
         }
-
-        return true;
-    }
-
-    private boolean isInBounds(int id) {
-        return id >= 0 && id < this.availableRecipes.size();
-    }
-
-    @Override
-    public void removed(@NotNull Player player) {
-        super.removed(player);
-        this.output.removeItemNoUpdate(1);
-        this.clearContainer(player, this.input);
-    }
-
-    public void setSlotUpdateListener(Runnable slotUpdateListener) {
-        this.slotUpdateListener = slotUpdateListener;
-    }
-
-    @Override
-    public void slotsChanged(@NotNull Container container) {
-        ItemStack firstIngredient = this.inputSlotOne.getItem();
-        ItemStack secondIngredient = this.inputSlotTwo.getItem();
-
-        if (!firstIngredient.is(this.inputStack.getItem()) || !secondIngredient.is(this.secondInputStack.getItem())) {
-            this.inputStack = firstIngredient.copy();
-            this.secondInputStack = secondIngredient.copy();
-            this.updateInput(firstIngredient);
+        if (moving.getCount() == original.getCount()) {
+            return ItemStack.EMPTY;
         }
-    }
-
-    private static SingleRecipeInput createRecipeInput(Container container) {
-        return new SingleRecipeInput(container.getItem(0));
-    }
-
-    private void updateInput(ItemStack itemStack) {
-        this.selectedRecipeIndex.set(-1);
-        this.outputSlot.set(ItemStack.EMPTY);
-
-        if (!itemStack.isEmpty()) {
-            this.availableRecipes = getCarpentryRecipesForItemStack(itemStack);
+        if (moving.isEmpty()) {
+            slot.set(ItemStack.EMPTY);
         } else {
-            this.availableRecipes = CarpentryRecipeDisplay.Grouping.empty();
+            slot.setChanged();
         }
+        slot.onTake(player, original);
+        if (index == 2 && !moving.isEmpty()) {
+            // A partial inventory transfer still consumes one complete recipe.
+            // Preserve the remainder before the result slot is populated again.
+            player.drop(moving, false, Prediction.PREDICTED);
+        }
+        broadcastChanges();
+        return original;
     }
 
-    public int getSelectedRecipeIndex() {
-        return this.selectedRecipeIndex.get();
+    private boolean isSecondIngredient(ItemStack stack) {
+        return CarpentryRecipeService.getRecipes(level).filter(input.getItem(0)).entries().stream()
+                .anyMatch(entry -> entry.ingredients().size() == 2 && entry.ingredients().get(1).test(stack));
     }
 
-    public CarpentryRecipeDisplay.Grouping getAvailableRecipes() {
-        return this.availableRecipes;
+    @Override
+    public boolean stillValid(Player player) {
+        return stillValid(access, player, CarpentryBlocks.CARPENTERS_WORKBENCH);
     }
 
-    public int getAvailableRecipeCount() {
-        return this.availableRecipes.size();
+    @Override
+    public boolean canTakeItemForPickAll(ItemStack stack, Slot slot) {
+        return slot.container != output && super.canTakeItemForPickAll(stack, slot);
     }
 
-    public boolean hasAvailableRecipes() {
-        return !this.availableRecipes.isEmpty();
+    /** All selections use stable IDs and a snapshot revision, including client prediction. */
+    public boolean selectRecipe(long revision, Identifier id) {
+        if (revision != CarpentryRecipeService.getRecipes(level).revision() || revision != availableRecipes.revision()) {
+            refreshRecipes();
+            return false;
+        }
+        for (int index = 0; index < availableRecipes.size(); index++) {
+            if (availableRecipes.entries().get(index).id().equals(id) && canCraftRecipe(index)) {
+                selectedId = id;
+                selectedRecipeIndex.set(index);
+                setupResultSlot();
+                return true;
+            }
+        }
+        clearSelection();
+        setupResultSlot();
+        return false;
+    }
+
+    private void clearSelection() {
+        selectedId = null;
+        selectedRecipeIndex.set(-1);
+    }
+
+    public void refreshRecipes() {
+        if (level.isClientSide() && outputSlot != null) {
+            outputSlot.set(ItemStack.EMPTY);
+        }
+        clearSelection();
+        slotsChanged(input);
+    }
+
+    @Override
+    public void slotsChanged(Container container) {
+        var snapshot = CarpentryRecipeService.getRecipes(level);
+        if (snapshot.revision() != availableRecipes.revision()) {
+            clearSelection();
+        }
+        availableRecipes = snapshot.filter(input.getItem(0));
+        int selected = -1;
+        for (int index = 0; index < availableRecipes.size(); index++) {
+            if (availableRecipes.entries().get(index).id().equals(selectedId)) {
+                selected = index;
+                break;
+            }
+        }
+        selectedRecipeIndex.set(selected);
+        if (selected == -1) {
+            selectedId = null;
+        }
+        setupResultSlot();
+        slotUpdateListener.run();
+    }
+
+    private CarpentryRecipeInput recipeInput() {
+        return new CarpentryRecipeInput(input.getItem(0), input.getItem(1));
+    }
+
+    private RecipeHolder<CarpentryRecipe> selectedServerRecipe() {
+        if (selectedId == null) {
+            return null;
+        }
+        var holder = CarpentryRecipeService.find(level, availableRecipes.revision(), selectedId);
+        return holder != null && holder.value().matches(recipeInput(), level) ? holder : null;
+    }
+
+    private void setupResultSlot() {
+        if (level.isClientSide() || outputSlot == null) {
+            return;
+        }
+        var holder = selectedServerRecipe();
+        output.setRecipeUsed(holder);
+        outputSlot.set(holder == null ? ItemStack.EMPTY : holder.value().assemble(recipeInput()));
+        broadcastChanges();
     }
 
     public boolean canCraftRecipe(int index) {
-        boolean hasRecipes = !this.availableRecipes.isEmpty();
-        boolean hasFirstInputSlotStack = this.inputSlotOne.hasItem();
-
-        if (!hasRecipes || !hasFirstInputSlotStack) {
+        if (index < 0 || index >= availableRecipes.size()) {
             return false;
         }
-
-        return hasRecipeIngredients(index);
+        var recipe = availableRecipes.entries().get(index);
+        for (int slot = 0; slot < recipe.ingredients().size(); slot++) {
+            var stack = input.getItem(slot);
+            if (!recipe.ingredients().get(slot).test(stack) || stack.getCount() < recipe.inputCounts().get(slot)) {
+                return false;
+            }
+        }
+        return true;
     }
 
     public boolean canCraftSelectedRecipe() {
-        boolean hasRecipes = !this.availableRecipes.isEmpty();
-        boolean hasFirstInputSlotStack = this.inputSlotOne.hasItem();
-        int selectedRecipeIndex = this.selectedRecipeIndex.get();
-
-        if (!hasRecipes || !hasFirstInputSlotStack || selectedRecipeIndex == -1) {
-            return false;
-        }
-
-        return hasRecipeIngredients(selectedRecipeIndex);
+        return canCraftRecipe(getSelectedRecipeIndex());
     }
 
-    private boolean hasRecipeIngredients(int index) {
-        CarpentryRecipeDisplay.GroupEntry recipe = availableRecipes.entries().get(index);
-        List<Ingredient> ingredients = recipe.ingredients();
-        List<Holder<Item>> firstIngredientMatchingItems = ingredients.get(0).items().toList();
-        List<Integer> inputCounts = recipe.inputCounts();
-        ItemStack firstInputItemStack = this.inputSlotOne.getItem();
-
-        boolean hasFirstInputIngredient = itemIsInMatchingStacks(firstIngredientMatchingItems, firstInputItemStack.getItem())
-                && firstInputItemStack.getCount() >= inputCounts.get(0);
-        boolean hasSecondInputIngredient = true;
-
-        if (ingredients.size() > 1) {
-            Ingredient secondIngredient = ingredients.get(1);
-            ItemStack secondInputItemStack = this.inputSlotTwo.getItem();
-
-            hasSecondInputIngredient = itemIsInMatchingStacks(secondIngredient.items().toList(), secondInputItemStack.getItem()) &&
-                    secondInputItemStack.getCount() >= inputCounts.get(1);
-        }
-
-        return hasFirstInputIngredient && hasSecondInputIngredient;
+    public int getSelectedRecipeIndex() {
+        return selectedRecipeIndex.get();
     }
 
-    private boolean itemIsInMatchingStacks(List<Holder<Item>> matchingItems, Item item) {
-        return matchingItems.stream().anyMatch(registryEntry -> registryEntry.value().equals(item));
+    public CarpentryRecipeDisplay.Grouping getAvailableRecipes() {
+        return availableRecipes;
     }
 
-    private void addPlayerInventory(Inventory playerInventory) {
-        for (int i = 0; i < 3; i++) {
-            for (int j = 0; j < 9; j++) {
-                this.addSlot(new Slot(playerInventory, j + i * 9 + 9, 8 + j * 18, 84 + i * 18));
-            }
-        }
+    public int getAvailableRecipeCount() {
+        return availableRecipes.size();
     }
 
-    private void addPlayerHotbar(Inventory playerInventory) {
-        for (int i = 0; i < 9; i++) {
-            this.addSlot(new Slot(playerInventory, i, 8 + i * 18, 142));
-        }
+    public boolean hasAvailableRecipes() {
+        return !availableRecipes.isEmpty();
     }
 
-    private void setupResultSlot(int selectedId) {
-        Optional<RecipeHolder<CarpentryRecipe>> optionalRecipe;
+    public void setSlotUpdateListener(Runnable listener) {
+        slotUpdateListener = listener;
+        listener.run();
+    }
 
-        if (hasAvailableRecipes() && this.isInBounds(selectedId) && canCraftSelectedRecipe()) {
-            CarpentryRecipeDisplay.GroupEntry recipeGroupEntry = this.availableRecipes.entries().get(selectedId);
-            optionalRecipe = recipeGroupEntry.recipe().recipe();
-
-        } else {
-            optionalRecipe = Optional.empty();
-        }
-
-        optionalRecipe.ifPresentOrElse(
-                recipeHolder -> {
-                    CarpentryRecipe carpentryRecipe = recipeHolder.value();
-                    ItemStack itemStack = carpentryRecipe.assemble(createRecipeInput(this.input), this.level.registryAccess());
-
-                    this.output.setRecipeUsed(recipeHolder);
-                    this.outputSlot.set(itemStack);
-                }, () -> {
-                    this.outputSlot.set(ItemStack.EMPTY);
-                    this.output.setRecipeUsed(null);
-                });
-
-        this.broadcastChanges();
+    @Override
+    public void removed(Player player) {
+        super.removed(player);
+        output.removeItemNoUpdate(0);
+        access.execute((world, pos) -> clearContainer(player, input));
     }
 }

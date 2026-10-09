@@ -13,7 +13,7 @@
     },
     "has_the_recipe": {
       "conditions": {
-        "recipe": "minecraft:brown_barber_chair_carpentry"
+        "recipes": "minecraft:brown_barber_chair_carpentry"
       },
       "trigger": "minecraft:recipe_unlocked"
     }

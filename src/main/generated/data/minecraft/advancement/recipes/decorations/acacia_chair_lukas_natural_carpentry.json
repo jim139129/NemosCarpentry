@@ -13,7 +13,7 @@
     },
     "has_the_recipe": {
       "conditions": {
-        "recipe": "minecraft:acacia_chair_lukas_natural_carpentry"
+        "recipes": "minecraft:acacia_chair_lukas_natural_carpentry"
       },
       "trigger": "minecraft:recipe_unlocked"
     }

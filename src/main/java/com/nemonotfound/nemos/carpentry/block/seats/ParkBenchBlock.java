@@ -1,6 +1,5 @@
 package com.nemonotfound.nemos.carpentry.block.seats;
 
-import com.mojang.serialization.MapCodec;
 import com.nemonotfound.nemos.carpentry.block.enums.BenchPart;
 import com.nemonotfound.nemos.carpentry.block.seats.parents.OldSitableBlock;
 import com.nemonotfound.nemos.carpentry.property.CarpentryBlockStateProperties;
@@ -34,7 +33,6 @@ import static net.minecraft.core.Direction.*;
 
 public class ParkBenchBlock extends OldSitableBlock implements SimpleWaterloggedBlock {
 
-    public static final MapCodec<ParkBenchBlock> CODEC = simpleCodec(ParkBenchBlock::new);
     public static final EnumProperty<@NotNull BenchPart> PART = CarpentryBlockStateProperties.BENCH_BLOCK_PART;
 
     private static final VoxelShape NORTH_SHAPE_LEFT = Stream.of(
@@ -196,11 +194,6 @@ public class ParkBenchBlock extends OldSitableBlock implements SimpleWaterlogged
                 .setValue(FACING, Direction.NORTH)
                 .setValue(WATERLOGGED, false)
                 .setValue(PART, BenchPart.LEFT));
-    }
-
-    @Override
-    protected @NotNull MapCodec<? extends HorizontalDirectionalBlock> codec() {
-        return CODEC;
     }
 
     @Override

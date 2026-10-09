@@ -13,7 +13,7 @@
     },
     "has_the_recipe": {
       "conditions": {
-        "recipe": "minecraft:oak_chair_gregory_carpentry"
+        "recipes": "minecraft:oak_chair_gregory_carpentry"
       },
       "trigger": "minecraft:recipe_unlocked"
     }

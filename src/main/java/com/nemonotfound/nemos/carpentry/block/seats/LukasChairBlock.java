@@ -1,6 +1,5 @@
 package com.nemonotfound.nemos.carpentry.block.seats;
 
-import com.mojang.serialization.MapCodec;
 import com.nemonotfound.nemos.carpentry.block.seats.parents.MultipleBlockChair;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.HorizontalDirectionalBlock;
@@ -14,7 +13,6 @@ import java.util.stream.Stream;
 
 public class LukasChairBlock extends MultipleBlockChair implements SimpleWaterloggedBlock {
 
-    public static final MapCodec<LukasChairBlock> CODEC = simpleCodec(LukasChairBlock::new);
 
     private static final VoxelShape NORTH_SHAPE = Stream.of(
             Block.box(12, 0, 12, 14, 7, 14),
@@ -81,8 +79,4 @@ public class LukasChairBlock extends MultipleBlockChair implements SimpleWaterlo
         super(properties, 0.58f, NORTH_SHAPE, EAST_SHAPE, SOUTH_SHAPE, WEST_SHAPE);
     }
 
-    @Override
-    protected @NotNull MapCodec<? extends HorizontalDirectionalBlock> codec() {
-        return CODEC;
-    }
 }

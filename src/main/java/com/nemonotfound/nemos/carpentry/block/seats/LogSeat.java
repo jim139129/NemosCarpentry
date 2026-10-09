@@ -1,6 +1,5 @@
 package com.nemonotfound.nemos.carpentry.block.seats;
 
-import com.mojang.serialization.MapCodec;
 import com.nemonotfound.nemos.carpentry.block.seats.parents.SitableBlock;
 import com.nemonotfound.nemos.carpentry.entity.CarpentryEntities;
 import net.minecraft.core.BlockPos;
@@ -18,7 +17,6 @@ import org.jetbrains.annotations.NotNull;
 
 public class LogSeat extends SitableBlock implements SimpleWaterloggedBlock {
 
-    public static final MapCodec<LogSeat> CODEC = simpleCodec(LogSeat::new);
 
     private static final VoxelShape SOUTH_SHAPE = Block.box(2, 0, 5, 14, 6, 11);
     private static final VoxelShape WEST_SHAPE = Block.box(5, 0, 2, 11, 6, 14);
@@ -33,11 +31,6 @@ public class LogSeat extends SitableBlock implements SimpleWaterloggedBlock {
     }
 
     @Override
-    protected @NotNull MapCodec<? extends HorizontalDirectionalBlock> codec() {
-        return CODEC;
-    }
-
-    @Override
     protected InteractionResult sitEntity(Level level, BlockPos pos, BlockState state, Entity entityToSit) {
         double posX = pos.getX() + 0.5;
         double posZ = pos.getZ() + 0.5;
@@ -49,7 +42,7 @@ public class LogSeat extends SitableBlock implements SimpleWaterloggedBlock {
         chairEntity.setNoGravity(true);
         chairEntity.setSilent(true);
         chairEntity.setInvisible(false);
-        chairEntity.setInvulnerable(true);
+        chairEntity.setPermanentlyInvulnerable(true);
 
         if (level.addFreshEntity(chairEntity)) {
             entityToSit.setYRot(yaw);

@@ -13,7 +13,7 @@
     },
     "has_the_recipe": {
       "conditions": {
-        "recipe": "nemos-carpentry:carpenters_workbench"
+        "recipes": "nemos-carpentry:carpenters_workbench"
       },
       "trigger": "minecraft:recipe_unlocked"
     }

@@ -13,7 +13,7 @@
     },
     "has_the_recipe": {
       "conditions": {
-        "recipe": "minecraft:ladder_carpentry"
+        "recipes": "minecraft:ladder_carpentry"
       },
       "trigger": "minecraft:recipe_unlocked"
     }

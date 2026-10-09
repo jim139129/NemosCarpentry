@@ -3,6 +3,7 @@ package com.nemonotfound.nemos.carpentry;
 import com.nemonotfound.nemos.carpentry.entity.CarpentryEntities;
 import com.nemonotfound.nemos.carpentry.item.CarpentryCreativeModeTabs;
 import com.nemonotfound.nemos.carpentry.recipe.CarpentryRecipeSerializer;
+import com.nemonotfound.nemos.carpentry.recipe.CarpentryRecipeService;
 import com.nemonotfound.nemos.carpentry.recipe.CarpentryRecipeTypes;
 import com.nemonotfound.nemos.carpentry.recipe.book.CarpentryRecipeBookCategory;
 import com.nemonotfound.nemos.carpentry.recipe.display.CarpentryRecipeDisplays;
@@ -26,5 +27,6 @@ public class NemosCarpentry implements ModInitializer {
 		CarpentryCreativeModeTabs.registerItemGroups();
 		CarpentryEntities.registerEntities();
 		CarpentryRecipeBookCategory.registerRecipeBookCategories();
+        CarpentryRecipeService.register();
 	}
 }

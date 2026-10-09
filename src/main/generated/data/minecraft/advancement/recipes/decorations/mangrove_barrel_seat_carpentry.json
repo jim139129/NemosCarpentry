@@ -13,7 +13,7 @@
     },
     "has_the_recipe": {
       "conditions": {
-        "recipe": "minecraft:mangrove_barrel_seat_carpentry"
+        "recipes": "minecraft:mangrove_barrel_seat_carpentry"
       },
       "trigger": "minecraft:recipe_unlocked"
     }

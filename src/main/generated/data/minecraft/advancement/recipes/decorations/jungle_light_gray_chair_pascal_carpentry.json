@@ -13,7 +13,7 @@
     },
     "has_the_recipe": {
       "conditions": {
-        "recipe": "minecraft:jungle_light_gray_chair_pascal_carpentry"
+        "recipes": "minecraft:jungle_light_gray_chair_pascal_carpentry"
       },
       "trigger": "minecraft:recipe_unlocked"
     }

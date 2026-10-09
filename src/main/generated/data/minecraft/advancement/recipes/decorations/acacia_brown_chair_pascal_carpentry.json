@@ -13,7 +13,7 @@
     },
     "has_the_recipe": {
       "conditions": {
-        "recipe": "minecraft:acacia_brown_chair_pascal_carpentry"
+        "recipes": "minecraft:acacia_brown_chair_pascal_carpentry"
       },
       "trigger": "minecraft:recipe_unlocked"
     }

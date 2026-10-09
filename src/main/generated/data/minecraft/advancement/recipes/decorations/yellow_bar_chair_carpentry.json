@@ -3,7 +3,7 @@
   "criteria": {
     "has_the_recipe": {
       "conditions": {
-        "recipe": "minecraft:yellow_bar_chair_carpentry"
+        "recipes": "minecraft:yellow_bar_chair_carpentry"
       },
       "trigger": "minecraft:recipe_unlocked"
     },

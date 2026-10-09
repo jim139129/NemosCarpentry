@@ -41,7 +41,7 @@ public class CarpentryRecipeCategory extends AbstractRecipeCategory<CarpentryRec
 
         builder.addOutputSlot(61, 18)
                 .setOutputSlotBackground()
-                .add(recipe.recipe().optionDisplay());
+                .add(recipe.optionDisplay());
     }
 
     @Override
@@ -54,9 +54,7 @@ public class CarpentryRecipeCategory extends AbstractRecipeCategory<CarpentryRec
 
     @Override
     public Identifier getIdentifier(CarpentryRecipeDisplay.GroupEntry recipe) {
-        return recipe.recipe().recipe()
-                .map(recipeHolder -> recipeHolder.id().identifier())
-                .orElse(null);
+        return recipe.id();
     }
 
     private static void addInputSlot(IRecipeLayoutBuilder builder, List<Ingredient> ingredients, List<Integer> inputCounts, int index, int x, int y) {

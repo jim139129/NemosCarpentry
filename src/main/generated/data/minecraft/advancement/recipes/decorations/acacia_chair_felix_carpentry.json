@@ -13,7 +13,7 @@
     },
     "has_the_recipe": {
       "conditions": {
-        "recipe": "minecraft:acacia_chair_felix_carpentry"
+        "recipes": "minecraft:acacia_chair_felix_carpentry"
       },
       "trigger": "minecraft:recipe_unlocked"
     }

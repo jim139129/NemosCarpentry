@@ -11,7 +11,8 @@ import static com.nemonotfound.nemos.carpentry.NemosCarpentry.log;
 
 public class CarpentryRecipeSerializer {
 
-    public static RecipeSerializer<CarpentryRecipe> CARPENTRY = register("carpentry", new CarpentryRecipe.Serializer<>(CarpentryRecipe::new));
+    public static final RecipeSerializer<CarpentryRecipe> CARPENTRY = register("carpentry",
+            new RecipeSerializer<>(CarpentryRecipe.CODEC, CarpentryRecipe.STREAM_CODEC));
 
     public static void registerRecipeSerializer() {
         log.info("Register recipe serializer");

@@ -13,7 +13,7 @@
     },
     "has_the_recipe": {
       "conditions": {
-        "recipe": "minecraft:crimson_standing_table_carpentry"
+        "recipes": "minecraft:crimson_standing_table_carpentry"
       },
       "trigger": "minecraft:recipe_unlocked"
     }

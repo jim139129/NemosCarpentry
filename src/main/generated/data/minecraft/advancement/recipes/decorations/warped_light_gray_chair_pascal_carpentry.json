@@ -3,7 +3,7 @@
   "criteria": {
     "has_the_recipe": {
       "conditions": {
-        "recipe": "minecraft:warped_light_gray_chair_pascal_carpentry"
+        "recipes": "minecraft:warped_light_gray_chair_pascal_carpentry"
       },
       "trigger": "minecraft:recipe_unlocked"
     },

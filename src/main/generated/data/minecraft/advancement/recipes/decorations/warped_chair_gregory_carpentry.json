@@ -3,7 +3,7 @@
   "criteria": {
     "has_the_recipe": {
       "conditions": {
-        "recipe": "minecraft:warped_chair_gregory_carpentry"
+        "recipes": "minecraft:warped_chair_gregory_carpentry"
       },
       "trigger": "minecraft:recipe_unlocked"
     },

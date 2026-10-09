@@ -13,7 +13,7 @@
     },
     "has_the_recipe": {
       "conditions": {
-        "recipe": "minecraft:spruce_brown_chair_pascal_carpentry"
+        "recipes": "minecraft:spruce_brown_chair_pascal_carpentry"
       },
       "trigger": "minecraft:recipe_unlocked"
     }

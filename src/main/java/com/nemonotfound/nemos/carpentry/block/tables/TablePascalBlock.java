@@ -1,6 +1,5 @@
 package com.nemonotfound.nemos.carpentry.block.tables;
 
-import com.mojang.serialization.MapCodec;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.HorizontalDirectionalBlock;
 import net.minecraft.world.phys.shapes.BooleanOp;
@@ -12,7 +11,6 @@ import java.util.stream.Stream;
 
 public class TablePascalBlock extends RotatableTableBlock {
 
-    public static final MapCodec<TablePascalBlock> CODEC = simpleCodec(TablePascalBlock::new);
 
     private static final VoxelShape NORTH_SHAPE = Shapes.join(
             Block.box(0, 7, 0, 16, 8, 16), Stream.of(
@@ -55,8 +53,4 @@ public class TablePascalBlock extends RotatableTableBlock {
         super(properties, NORTH_SHAPE, EAST_SHAPE, SOUTH_SHAPE, WEST_SHAPE);
     }
 
-    @Override
-    protected @NotNull MapCodec<? extends HorizontalDirectionalBlock> codec() {
-        return CODEC;
-    }
 }

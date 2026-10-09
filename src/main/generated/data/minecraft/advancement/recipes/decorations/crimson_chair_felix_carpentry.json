@@ -13,7 +13,7 @@
     },
     "has_the_recipe": {
       "conditions": {
-        "recipe": "minecraft:crimson_chair_felix_carpentry"
+        "recipes": "minecraft:crimson_chair_felix_carpentry"
       },
       "trigger": "minecraft:recipe_unlocked"
     }

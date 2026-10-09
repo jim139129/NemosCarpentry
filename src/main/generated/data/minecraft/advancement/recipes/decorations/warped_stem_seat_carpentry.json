@@ -3,7 +3,7 @@
   "criteria": {
     "has_the_recipe": {
       "conditions": {
-        "recipe": "minecraft:warped_stem_seat_carpentry"
+        "recipes": "minecraft:warped_stem_seat_carpentry"
       },
       "trigger": "minecraft:recipe_unlocked"
     },

@@ -13,7 +13,7 @@
     },
     "has_the_recipe": {
       "conditions": {
-        "recipe": "minecraft:bamboo_table_the_classic_carpentry"
+        "recipes": "minecraft:bamboo_table_the_classic_carpentry"
       },
       "trigger": "minecraft:recipe_unlocked"
     }

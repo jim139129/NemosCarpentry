@@ -4,7 +4,10 @@ import com.nemonotfound.nemos.carpentry.recipe.display.CarpentryRecipeDisplay;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiGraphics;
+import com.mojang.blaze3d.platform.InputConstants;
+import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
+import com.nemonotfound.nemos.carpentry.network.SelectCarpentryRecipePayload;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 import net.minecraft.client.input.MouseButtonEvent;
 import net.minecraft.client.renderer.RenderPipelines;
@@ -48,7 +51,8 @@ public class CarpentryScreen extends AbstractContainerScreen<CarpentryMenu> {
     }
 
     @Override
-    protected void renderBg(GuiGraphics guiGraphics, float delta, int mouseX, int mouseY) {
+    public void extractBackground(GuiGraphicsExtractor guiGraphics, int mouseX, int mouseY, float delta) {
+        super.extractBackground(guiGraphics, mouseX, mouseY, delta);
         guiGraphics.blit(RenderPipelines.GUI_TEXTURED, TEXTURE, leftPos, topPos, 0.0F, 0.0F, this.imageWidth, this.imageHeight, 256, 256);
         drawScroll(guiGraphics);
 
@@ -57,9 +61,9 @@ public class CarpentryScreen extends AbstractContainerScreen<CarpentryMenu> {
     }
 
     @Override
-    public void render(@NotNull GuiGraphics guiGraphics, int mouseX, int mouseY, float delta) {
-        super.render(guiGraphics, mouseX, mouseY, delta);
-        this.renderTooltip(guiGraphics, mouseX, mouseY);
+    public void extractRenderState(@NotNull GuiGraphicsExtractor guiGraphics, int mouseX, int mouseY, float delta) {
+        super.extractRenderState(guiGraphics, mouseX, mouseY, delta);
+        this.extractTooltip(guiGraphics, mouseX, mouseY);
     }
 
     //TODO: REFACTOR
@@ -67,26 +71,26 @@ public class CarpentryScreen extends AbstractContainerScreen<CarpentryMenu> {
     public boolean mouseClicked(@NotNull MouseButtonEvent mouseButtonEvent, boolean isDoubleClick) {
         this.scrolling = false;
 
-        if (hasAvailableRecipes) {
+        if (hasAvailableRecipes && mouseButtonEvent.button() == InputConstants.MOUSE_BUTTON_LEFT) {
             int firstRecipeX = this.leftPos + RELATIVE_RECIPE_X;
             int firstRecipeY = this.topPos + RELATIVE_RECIPE_Y;
             var maxVisibleRecipeCount = 12;
             int lastVisibleRecipeIndex = this.firstVisibleRecipeIndex + maxVisibleRecipeCount;
 
-            for (int recipeIndex = this.firstVisibleRecipeIndex; recipeIndex < lastVisibleRecipeIndex; ++recipeIndex) {
+            for (int recipeIndex = this.firstVisibleRecipeIndex; recipeIndex < Math.min(lastVisibleRecipeIndex, menu.getAvailableRecipeCount()); ++recipeIndex) {
                 int visibleRecipeIndex = recipeIndex - this.firstVisibleRecipeIndex;
                 double mouseDistanceToRecipeX = mouseButtonEvent.x() - (double) (firstRecipeX + visibleRecipeIndex % 4 * 16);
                 double mouseDistanceToRecipeY = mouseButtonEvent.y() - (double) (firstRecipeY + visibleRecipeIndex / 4 * 18);
 
-                if (mouseDistanceToRecipeX >= 0.0 && mouseDistanceToRecipeY >= 0.0 && mouseDistanceToRecipeX < RECIPES_IMAGE_SIZE_WIDTH && mouseDistanceToRecipeY < RECIPES_IMAGE_SIZE_HEIGHT && this.menu.clickMenuButton(this.minecraft.player, recipeIndex)) {
-                    if (this.menu.getAvailableRecipeCount() > recipeIndex) {
-                        if (!this.menu.canCraftSelectedRecipe()) {
-                            Minecraft.getInstance().getSoundManager().play(SimpleSoundInstance.forUI(SoundEvents.UI_STONECUTTER_SELECT_RECIPE, 4.0f));
-                        } else {
-                            Minecraft.getInstance().getSoundManager().play(SimpleSoundInstance.forUI(SoundEvents.UI_STONECUTTER_SELECT_RECIPE, 1.0f));
-                        }
+                if (mouseDistanceToRecipeX >= 0.0 && mouseDistanceToRecipeY >= 0.0 && mouseDistanceToRecipeX < RECIPES_IMAGE_SIZE_WIDTH && mouseDistanceToRecipeY < RECIPES_IMAGE_SIZE_HEIGHT) {
+                    var recipes = menu.getAvailableRecipes();
+                    var recipe = recipes.entries().get(recipeIndex);
+                    boolean selected = menu.selectRecipe(recipes.revision(), recipe.id());
+                    Minecraft.getInstance().getSoundManager().play(SimpleSoundInstance.forUI(
+                            SoundEvents.UI_STONECUTTER_SELECT_RECIPE, selected ? 1.0f : 4.0f));
+                    if (selected) {
+                        ClientPlayNetworking.send(new SelectCarpentryRecipePayload(menu.containerId, recipes.revision(), recipe.id()));
                     }
-                    this.minecraft.gameMode.handleInventoryButtonClick((this.menu).containerId, recipeIndex);
                     return true;
                 }
             }
@@ -138,8 +142,8 @@ public class CarpentryScreen extends AbstractContainerScreen<CarpentryMenu> {
 
     //TODO: REFACTOR
     @Override
-    protected void renderTooltip(@NotNull GuiGraphics guiGraphics, int x, int y) {
-        super.renderTooltip(guiGraphics, x, y);
+    protected void extractTooltip(@NotNull GuiGraphicsExtractor guiGraphics, int x, int y) {
+        super.extractTooltip(guiGraphics, x, y);
 
         int toolPosX = this.leftPos + 52;
         int toolPosY = this.topPos + 14;
@@ -152,14 +156,14 @@ public class CarpentryScreen extends AbstractContainerScreen<CarpentryMenu> {
             int o = toolPosY + m / 4 * 18 + 2;
             if (x >= n && x < n + 16 && y >= o && y < o + 18) {
                 ContextMap contextMap = SlotDisplayContext.fromLevel(this.minecraft.level);
-                SlotDisplay slotDisplay = availableRecipes.entries().get(l).recipe().optionDisplay();
+                SlotDisplay slotDisplay = availableRecipes.entries().get(l).optionDisplay();
                 guiGraphics.setTooltipForNextFrame(this.font, slotDisplay.resolveForFirstStack(contextMap), x, y);
             }
         }
     }
 
     //TODO: REFACTOR
-    private void renderRecipeBackground(GuiGraphics guiGraphics, int mouseX, int mouseY, int x, int y, int scrollOffset) {
+    private void renderRecipeBackground(GuiGraphicsExtractor guiGraphics, int mouseX, int mouseY, int x, int y, int scrollOffset) {
         for (int i = this.firstVisibleRecipeIndex; i < scrollOffset && i < this.menu.getAvailableRecipeCount(); ++i) {
             int j = i - this.firstVisibleRecipeIndex;
             int k = x + j % 4 * 16;
@@ -174,14 +178,14 @@ public class CarpentryScreen extends AbstractContainerScreen<CarpentryMenu> {
         }
     }
 
-    private void renderRecipeBackgroundForCraftableRecipe(GuiGraphics guiGraphics, int i, int mouseX, int mouseY, int k, int m) {
+    private void renderRecipeBackgroundForCraftableRecipe(GuiGraphicsExtractor guiGraphics, int i, int mouseX, int mouseY, int k, int m) {
         Identifier identifier = i == this.menu.getSelectedRecipeIndex() ? RECIPE_SELECTED_TEXTURE :
                 (mouseX >= k && mouseY >= m && mouseX < k + 16 && mouseY < m + 18 ? RECIPE_HIGHLIGHTED_TEXTURE : RECIPE_TEXTURE);
         guiGraphics.blitSprite(RenderPipelines.GUI_TEXTURED, identifier, k, m - 1, 16, 18);
     }
 
     //TODO: REFACTOR
-    private void renderRecipeIcons(GuiGraphics guiGraphics, int x, int y, int scrollOffset) {
+    private void renderRecipeIcons(GuiGraphicsExtractor guiGraphics, int x, int y, int scrollOffset) {
         CarpentryRecipeDisplay.Grouping availableRecipes = this.menu.getAvailableRecipes();
         ContextMap contextMap = SlotDisplayContext.fromLevel(this.minecraft.level);
 
@@ -190,12 +194,12 @@ public class CarpentryScreen extends AbstractContainerScreen<CarpentryMenu> {
             int k = x + yPosWithoutScrollOffset % 4 * 16;
             int l = yPosWithoutScrollOffset / 4;
             int m = y + l * 18 + 2;
-            SlotDisplay slotDisplay = (availableRecipes.entries().get(i)).recipe().optionDisplay();
-            guiGraphics.renderItem(slotDisplay.resolveForFirstStack(contextMap), k, m);
+            SlotDisplay slotDisplay = (availableRecipes.entries().get(i)).optionDisplay();
+            guiGraphics.item(slotDisplay.resolveForFirstStack(contextMap), k, m);
         }
     }
 
-    private void drawScroll(GuiGraphics guiGraphics) {
+    private void drawScroll(GuiGraphicsExtractor guiGraphics) {
         int yPosAfterScrolling = (int) (41.0f * this.scrollAmount);
         Identifier identifier = this.shouldScroll() ? SCROLLER_TEXTURE : SCROLLER_DISABLED_TEXTURE;
         guiGraphics.blitSprite(RenderPipelines.GUI_TEXTURED, identifier, leftPos + 119, topPos + 15 + yPosAfterScrolling, 12, 15);
@@ -211,7 +215,7 @@ public class CarpentryScreen extends AbstractContainerScreen<CarpentryMenu> {
 
     private void onInventoryChange() {
         hasAvailableRecipes = this.menu.hasAvailableRecipes();
-        if (!hasAvailableRecipes) {
+        if (!hasAvailableRecipes || firstVisibleRecipeIndex > Math.max(0, getMaxScroll()) * 4) {
             this.scrollAmount = 0.0f;
             this.firstVisibleRecipeIndex = 0;
         }

@@ -114,7 +114,7 @@ public abstract class OldSitableBlock extends HorizontalDirectionalBlock {
         chairEntity.setNoGravity(true);
         chairEntity.setSilent(true);
         chairEntity.setInvisible(false);
-        chairEntity.setInvulnerable(true);
+        chairEntity.setPermanentlyInvulnerable(true);
 
         if (level.addFreshEntity(chairEntity)) {
             entityToSit.setYRot(yaw);

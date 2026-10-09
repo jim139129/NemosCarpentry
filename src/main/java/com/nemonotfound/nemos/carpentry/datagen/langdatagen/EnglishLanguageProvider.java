@@ -1,7 +1,7 @@
 package com.nemonotfound.nemos.carpentry.datagen.langdatagen;
 
 import com.nemonotfound.nemos.carpentry.block.CarpentryBlocks;
-import net.fabricmc.fabric.api.datagen.v1.FabricDataOutput;
+import net.fabricmc.fabric.api.datagen.v1.FabricPackOutput;
 import net.fabricmc.fabric.api.datagen.v1.provider.FabricLanguageProvider;
 import net.minecraft.core.HolderLookup;
 import org.jetbrains.annotations.NotNull;
@@ -12,7 +12,7 @@ import java.util.concurrent.CompletableFuture;
 
 public class EnglishLanguageProvider extends FabricLanguageProvider {
 
-    public EnglishLanguageProvider(FabricDataOutput dataOutput, CompletableFuture<HolderLookup.Provider> provider) {
+    public EnglishLanguageProvider(FabricPackOutput dataOutput, CompletableFuture<HolderLookup.Provider> provider) {
         super(dataOutput, provider);
     }
 
@@ -368,7 +368,7 @@ public class EnglishLanguageProvider extends FabricLanguageProvider {
         translationBuilder.add("itemGroup.nemos-carpentry.outdoor", "Outdoor");
 
         try {
-            Optional<Path> optionalPath = dataOutput.getModContainer().findPath("en_us.json");
+            Optional<Path> optionalPath = packOutput.getModContainer().findPath("en_us.json");
 
             if (optionalPath.isPresent()) {
                 translationBuilder.add(optionalPath.get());

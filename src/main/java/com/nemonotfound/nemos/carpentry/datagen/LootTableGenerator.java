@@ -5,17 +5,17 @@ import com.nemonotfound.nemos.carpentry.block.enums.BenchPart;
 import com.nemonotfound.nemos.carpentry.block.enums.ChairPart;
 import com.nemonotfound.nemos.carpentry.block.seats.ParkBenchBlock;
 import com.nemonotfound.nemos.carpentry.property.CarpentryBlockStateProperties;
-import net.fabricmc.fabric.api.datagen.v1.FabricDataOutput;
-import net.fabricmc.fabric.api.datagen.v1.provider.FabricBlockLootTableProvider;
+import net.fabricmc.fabric.api.datagen.v1.FabricPackOutput;
+import net.fabricmc.fabric.api.datagen.v1.provider.FabricBlockLootSubProvider;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.storage.loot.LootTable;
 
 import java.util.concurrent.CompletableFuture;
 
-public class LootTableGenerator extends FabricBlockLootTableProvider {
+public class LootTableGenerator extends FabricBlockLootSubProvider {
 
-    public LootTableGenerator(FabricDataOutput dataOutput, CompletableFuture<HolderLookup.Provider> registryLookup) {
+    public LootTableGenerator(FabricPackOutput dataOutput, CompletableFuture<HolderLookup.Provider> registryLookup) {
         super(dataOutput, registryLookup);
     }
 

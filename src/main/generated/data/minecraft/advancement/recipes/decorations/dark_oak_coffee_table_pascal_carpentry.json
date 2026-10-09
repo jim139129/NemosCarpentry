@@ -13,7 +13,7 @@
     },
     "has_the_recipe": {
       "conditions": {
-        "recipe": "minecraft:dark_oak_coffee_table_pascal_carpentry"
+        "recipes": "minecraft:dark_oak_coffee_table_pascal_carpentry"
       },
       "trigger": "minecraft:recipe_unlocked"
     }

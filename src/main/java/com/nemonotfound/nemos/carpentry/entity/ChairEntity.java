@@ -58,7 +58,7 @@ public class ChairEntity extends Entity {
     //TODO: Refactor
     @Override
     public @NotNull Vec3 getDismountLocationForPassenger(@NotNull LivingEntity passenger) {
-        var direction = this.getMotionDirection();
+        var direction = this.getDirection();
 
         if (direction.getAxis() != Direction.Axis.Y) {
             var offsetsForDirection = DismountHelper.offsetsForDirection(direction);

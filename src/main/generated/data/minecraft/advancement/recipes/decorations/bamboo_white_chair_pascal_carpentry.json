@@ -13,7 +13,7 @@
     },
     "has_the_recipe": {
       "conditions": {
-        "recipe": "minecraft:bamboo_white_chair_pascal_carpentry"
+        "recipes": "minecraft:bamboo_white_chair_pascal_carpentry"
       },
       "trigger": "minecraft:recipe_unlocked"
     }

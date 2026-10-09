@@ -1,7 +1,7 @@
 package com.nemonotfound.nemos.carpentry.item;
 
 import com.nemonotfound.nemos.carpentry.block.CarpentryBlocks;
-import net.fabricmc.fabric.api.itemgroup.v1.FabricItemGroup;
+import net.fabricmc.fabric.api.creativetab.v1.FabricCreativeModeTab;
 import net.minecraft.core.Registry;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.core.registries.Registries;
@@ -28,7 +28,7 @@ public class CarpentryCreativeModeTabs {
     }
 
     private static void registerNemosCarpentryItemGroup(Item iconItem) {
-        CreativeModeTab ITEM_GROUP = FabricItemGroup.builder()
+        CreativeModeTab ITEM_GROUP = FabricCreativeModeTab.builder()
                 .icon(() -> new ItemStack(iconItem))
                 .title(Component.translatable("itemGroup.nemos-carpentry.nemos_carpentry"))
                 .displayItems((context, entries) -> {
@@ -671,7 +671,7 @@ public class CarpentryCreativeModeTabs {
     }
 
     private static void registerSeatsItemGroup(Item iconItem) {
-        CreativeModeTab ITEM_GROUP = FabricItemGroup.builder()
+        CreativeModeTab ITEM_GROUP = FabricCreativeModeTab.builder()
                 .icon(() -> new ItemStack(iconItem))
                 .title(Component.translatable("itemGroup.nemos-carpentry.seats"))
                 .displayItems((context, entries) -> {
@@ -1037,7 +1037,7 @@ public class CarpentryCreativeModeTabs {
     }
 
     private static void registerTablesItemGroup(Item iconItem) {
-        CreativeModeTab ITEM_GROUP = FabricItemGroup.builder()
+        CreativeModeTab ITEM_GROUP = FabricCreativeModeTab.builder()
                 .icon(() -> new ItemStack(iconItem))
                 .title(Component.translatable("itemGroup.nemos-carpentry.tables"))
                 .displayItems((context, entries) -> {
@@ -1096,7 +1096,7 @@ public class CarpentryCreativeModeTabs {
     }
 
     private static void registerOutdoorItemGroup(Item iconItem) {
-        CreativeModeTab ITEM_GROUP = FabricItemGroup.builder()
+        CreativeModeTab ITEM_GROUP = FabricCreativeModeTab.builder()
                 .icon(() -> new ItemStack(iconItem))
                 .title(Component.translatable("itemGroup.nemos-carpentry.outdoor"))
                 .displayItems((context, entries) -> {

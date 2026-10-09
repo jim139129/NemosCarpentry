@@ -1,6 +1,5 @@
 package com.nemonotfound.nemos.carpentry.block;
 
-import com.mojang.serialization.MapCodec;
 import com.nemonotfound.nemos.carpentry.screen.CarpentryMenu;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
@@ -22,16 +21,10 @@ import static com.nemonotfound.nemos.carpentry.NemosCarpentry.MOD_ID;
 
 public class CarpentersWorkbenchBlock extends Block {
 
-    public static final MapCodec<CarpentersWorkbenchBlock> CODEC = simpleCodec(CarpentersWorkbenchBlock::new);
     private static final Component TITLE = Component.translatable(MOD_ID + ".container.carpenters_workbench");
 
     public CarpentersWorkbenchBlock(Properties properties) {
         super(properties);
-    }
-
-    @Override
-    protected @NotNull MapCodec<? extends Block> codec() {
-        return CODEC;
     }
 
     @Override
@@ -40,7 +33,7 @@ public class CarpentersWorkbenchBlock extends Block {
     }
 
     @Override
-    protected @NotNull InteractionResult useWithoutItem(@NotNull BlockState state, Level level, @NotNull BlockPos pos, @NotNull Player player, @NotNull BlockHitResult hit) {
+    public @NotNull InteractionResult useWithoutItem(@NotNull BlockState state, Level level, @NotNull BlockPos pos, @NotNull Player player, @NotNull BlockHitResult hit) {
         if (!level.isClientSide()) {
             player.openMenu(createScreenHandlerFactory(level, pos));
             player.awardStat(Stats.ITEM_USED.get(this.asItem()));

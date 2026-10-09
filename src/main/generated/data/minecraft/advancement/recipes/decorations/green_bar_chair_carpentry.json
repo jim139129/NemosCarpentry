@@ -13,7 +13,7 @@
     },
     "has_the_recipe": {
       "conditions": {
-        "recipe": "minecraft:green_bar_chair_carpentry"
+        "recipes": "minecraft:green_bar_chair_carpentry"
       },
       "trigger": "minecraft:recipe_unlocked"
     }

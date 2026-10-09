@@ -1,45 +1,39 @@
 {
-	"schemaVersion": 1,
-	"id": "nemos-carpentry",
-	"version": "${version}",
-	"name": "Nemo's Carpentry",
-	"description": "Add some furniture to Minecraft!",
-	"authors": [
-		"DevNemo"
-	],
-	"contact": {
-		"homepage": "https://nemonotfound.com"
-	},
-	"license": "MIT",
-	"icon": "assets/nemos-carpentry/icon.png",
-	"environment": "*",
-	"entrypoints": {
-		"fabric-datagen": [
-          "com.nemonotfound.nemos.carpentry.NemosCarpentryDataGenerator"
-		],
-		"main": [
-          "com.nemonotfound.nemos.carpentry.NemosCarpentry"
-		],
-		"client": [
-          "com.nemonotfound.nemos.carpentry.NemosCarpentryClient"
-		],
-		"jei_mod_plugin": [
-          "com.nemonotfound.nemos.carpentry.jei.NemosCarpentryJeiPlugin"
-		]
-	},
-	"mixins": [
-		"nemos-carpentry.mixins.json"
-	],
-	"depends": {
-		"fabricloader": ">=0.17.2",
-		"minecraft": [
-			">=1.21.8"
-		],
-		"java": ">=21",
-		"fabric-api": "*"
-	},
-	"suggests": {
-		"jei": "*"
-	},
-	"accessWidener": "nemos-carpentry.accesswidener"
+  "schemaVersion": 1,
+  "id": "nemos-carpentry",
+  "version": "${version}",
+  "name": "Nemo's Carpentry",
+  "description": "Add some furniture to Minecraft!",
+  "authors": [
+    "DevNemo"
+  ],
+  "contact": {
+    "homepage": "https://nemonotfound.com"
+  },
+  "license": "MIT",
+  "icon": "assets/nemos-carpentry/icon.png",
+  "environment": "*",
+  "entrypoints": {
+    "fabric-datagen": [
+      "com.nemonotfound.nemos.carpentry.NemosCarpentryDataGenerator"
+    ],
+    "main": [
+      "com.nemonotfound.nemos.carpentry.NemosCarpentry"
+    ],
+    "client": [
+      "com.nemonotfound.nemos.carpentry.NemosCarpentryClient"
+    ],
+    "jei_mod_plugin": [
+      "com.nemonotfound.nemos.carpentry.jei.NemosCarpentryJeiPlugin"
+    ]
+  },
+  "depends": {
+    "fabricloader": ">=0.19.5",
+    "minecraft": "~26.3",
+    "java": ">=25",
+    "fabric-api": ">=0.162.0+26.3"
+  },
+  "suggests": {
+    "jei": ">=31.9.0.61"
+  }
 }

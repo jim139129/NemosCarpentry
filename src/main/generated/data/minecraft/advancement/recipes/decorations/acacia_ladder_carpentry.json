@@ -13,7 +13,7 @@
     },
     "has_the_recipe": {
       "conditions": {
-        "recipe": "minecraft:acacia_ladder_carpentry"
+        "recipes": "minecraft:acacia_ladder_carpentry"
       },
       "trigger": "minecraft:recipe_unlocked"
     }

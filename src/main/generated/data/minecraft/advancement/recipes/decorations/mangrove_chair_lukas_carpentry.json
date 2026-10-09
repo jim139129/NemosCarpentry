@@ -13,7 +13,7 @@
     },
     "has_the_recipe": {
       "conditions": {
-        "recipe": "minecraft:mangrove_chair_lukas_carpentry"
+        "recipes": "minecraft:mangrove_chair_lukas_carpentry"
       },
       "trigger": "minecraft:recipe_unlocked"
     }

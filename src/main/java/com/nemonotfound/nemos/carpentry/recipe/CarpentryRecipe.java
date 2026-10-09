@@ -6,137 +6,101 @@ import com.mojang.serialization.codecs.RecordCodecBuilder;
 import com.nemonotfound.nemos.carpentry.item.CarpentryItems;
 import com.nemonotfound.nemos.carpentry.recipe.book.CarpentryRecipeBookCategory;
 import com.nemonotfound.nemos.carpentry.recipe.display.CarpentersWorkbenchRecipeDisplay;
-import net.minecraft.core.HolderLookup;
 import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.codec.ByteBufCodecs;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.ItemStackTemplate;
 import net.minecraft.world.item.crafting.*;
 import net.minecraft.world.item.crafting.display.RecipeDisplay;
 import net.minecraft.world.item.crafting.display.SlotDisplay;
 import net.minecraft.world.level.Level;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
 
-public class CarpentryRecipe implements Recipe<SingleRecipeInput> {
+public record CarpentryRecipe(List<Ingredient> ingredients, List<Integer> inputCounts,
+                             ItemStackTemplate result) implements Recipe<CarpentryRecipeInput> {
+    public static final MapCodec<CarpentryRecipe> CODEC = RecordCodecBuilder.mapCodec(instance -> instance.group(
+            Ingredient.CODEC.listOf(1, 2).fieldOf("ingredients").forGetter(CarpentryRecipe::ingredients),
+            Codec.intRange(1, Integer.MAX_VALUE).listOf(1, 2).fieldOf("inputCounts").forGetter(CarpentryRecipe::inputCounts),
+            ItemStackTemplate.CODEC.fieldOf("result").forGetter(CarpentryRecipe::result)
+    ).apply(instance, CarpentryRecipe::new));
 
-    private final List<Ingredient> ingredients;
-    private final List<Integer> inputCounts;
-    private final ItemStack result;
-    @Nullable
-    private PlacementInfo placementInfo;
+    public static final StreamCodec<RegistryFriendlyByteBuf, CarpentryRecipe> STREAM_CODEC = StreamCodec.composite(
+            Ingredient.CONTENTS_STREAM_CODEC.apply(ByteBufCodecs.list(2)), CarpentryRecipe::ingredients,
+            ByteBufCodecs.VAR_INT.apply(ByteBufCodecs.list(2)), CarpentryRecipe::inputCounts,
+            ItemStackTemplate.STREAM_CODEC, CarpentryRecipe::result,
+            CarpentryRecipe::new
+    );
 
-    public CarpentryRecipe(List<Ingredient> ingredients, List<Integer> inputCounts, ItemStack result) {
-        this.ingredients = ingredients;
-        this.inputCounts = inputCounts;
-        this.result = result;
+    public CarpentryRecipe {
+        ingredients = List.copyOf(ingredients);
+        inputCounts = List.copyOf(inputCounts);
+        validateInputs(ingredients, inputCounts);
+        java.util.Objects.requireNonNull(result, "result");
+    }
+
+    public static void validateInputs(List<Ingredient> ingredients, List<Integer> counts) {
+        if (ingredients.isEmpty() || ingredients.size() > 2 || ingredients.size() != counts.size()
+                || counts.stream().anyMatch(count -> count < 1)) {
+            throw new IllegalArgumentException("Carpentry requires one or two ingredients with matching positive counts");
+        }
     }
 
     @Override
-    public @NotNull RecipeSerializer<@NotNull CarpentryRecipe> getSerializer() {
+    public RecipeSerializer<CarpentryRecipe> getSerializer() {
         return CarpentryRecipeSerializer.CARPENTRY;
     }
 
     @Override
-    public @NotNull RecipeType<@NotNull CarpentryRecipe> getType() {
+    public RecipeType<CarpentryRecipe> getType() {
         return CarpentryRecipeTypes.CARPENTRY;
     }
 
     @Override
-    public @NotNull List<RecipeDisplay> display() {
-        List<SlotDisplay> ingredientSlotDisplays = this.ingredients.stream()
-                .map(Ingredient::display)
-                .toList();
-
-        return List.of(
-                new CarpentersWorkbenchRecipeDisplay(
-                        ingredientSlotDisplays,
-                        this.createResultDisplay(),
-                        new SlotDisplay.ItemSlotDisplay(CarpentryItems.CARPENTERS_WORKBENCH)
-                )
-        );
+    public List<RecipeDisplay> display() {
+        return List.of(new CarpentersWorkbenchRecipeDisplay(ingredients.stream().map(Ingredient::display).toList(),
+                createResultDisplay(), new SlotDisplay.ItemSlotDisplay(CarpentryItems.CARPENTERS_WORKBENCH)));
     }
 
     public SlotDisplay createResultDisplay() {
-        return new SlotDisplay.ItemStackSlotDisplay(this.getResult());
+        return new SlotDisplay.ItemStackSlotDisplay(result);
     }
 
     @Override
-    public @NotNull RecipeBookCategory recipeBookCategory() {
+    public RecipeBookCategory recipeBookCategory() {
         return CarpentryRecipeBookCategory.CARPENTERS_WORKBENCH;
     }
 
     @Override
-    public boolean matches(SingleRecipeInput singleRecipeInput, @NotNull Level level) {
-        return this.ingredients.get(0).test(singleRecipeInput.getItem(0));
+    public boolean matches(CarpentryRecipeInput input, Level level) {
+        for (int slot = 0; slot < ingredients.size(); slot++) {
+            if (!ingredients.get(slot).test(input.getItem(slot))
+                    || input.getItem(slot).getCount() < inputCounts.get(slot)) {
+                return false;
+            }
+        }
+        // A single-material recipe leaves anything in the second slot untouched.
+        return true;
     }
 
     @Override
-    public @NotNull ItemStack assemble(SingleRecipeInput singleRecipeInput, HolderLookup.@NotNull Provider lookup) {
-        return result.copy();
+    public ItemStack assemble(CarpentryRecipeInput input) {
+        return result.create();
     }
 
-    public List<Ingredient> getIngredients() {
-        return ingredients;
+    @Override
+    public PlacementInfo placementInfo() {
+        return PlacementInfo.create(ingredients);
     }
 
-    public List<Integer> getInputCounts() {
-        return inputCounts;
+    @Override
+    public String group() {
+        return "";
     }
 
-    public ItemStack getResult() {
-        return result;
-    }
-
-    //TODO: MAKE AVAILABLE FOR DOUBLE
-    public @NotNull PlacementInfo placementInfo() {
-        if (this.placementInfo == null) {
-            this.placementInfo = PlacementInfo.create(this.ingredients.get(0));
-        }
-
-        return this.placementInfo;
-    }
-
-    @FunctionalInterface
-    public interface RecipeFactory<T extends CarpentryRecipe> {
-        T create(List<Ingredient> ingredients, List<Integer> inputCounts, ItemStack result);
-    }
-
-    public static class Serializer<T extends CarpentryRecipe> implements RecipeSerializer<T> {
-
-        private final MapCodec<T> codec;
-        private final StreamCodec<RegistryFriendlyByteBuf, T> streamCodec;
-
-        protected Serializer(CarpentryRecipe.RecipeFactory<T> recipeFactory) {
-            this.codec = RecordCodecBuilder.mapCodec(
-                    instance -> instance.group(
-                                    Ingredient.CODEC.listOf(1, 2).fieldOf("ingredients").forGetter(CarpentryRecipe::getIngredients),
-                                    Codec.INT.listOf(1, 2).fieldOf("inputCounts").forGetter(CarpentryRecipe::getInputCounts),
-                                    ItemStack.STRICT_CODEC.fieldOf("result").forGetter(CarpentryRecipe::getResult)
-                            )
-                            .apply(instance, recipeFactory::create)
-            );
-            this.streamCodec = StreamCodec.composite(
-                    Ingredient.CONTENTS_STREAM_CODEC.apply(ByteBufCodecs.list()),
-                    CarpentryRecipe::getIngredients,
-                    ByteBufCodecs.INT.apply(ByteBufCodecs.list()),
-                    CarpentryRecipe::getInputCounts,
-                    ItemStack.STREAM_CODEC,
-                    CarpentryRecipe::getResult,
-                    recipeFactory::create
-            );
-        }
-
-        @Override
-        public @NotNull MapCodec<T> codec() {
-            return codec;
-        }
-
-        @Override
-        public @NotNull StreamCodec<RegistryFriendlyByteBuf, T> streamCodec() {
-            return streamCodec;
-        }
+    @Override
+    public boolean showNotification() {
+        return true;
     }
 }

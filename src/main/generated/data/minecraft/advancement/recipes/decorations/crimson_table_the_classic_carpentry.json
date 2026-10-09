@@ -13,7 +13,7 @@
     },
     "has_the_recipe": {
       "conditions": {
-        "recipe": "minecraft:crimson_table_the_classic_carpentry"
+        "recipes": "minecraft:crimson_table_the_classic_carpentry"
       },
       "trigger": "minecraft:recipe_unlocked"
     }

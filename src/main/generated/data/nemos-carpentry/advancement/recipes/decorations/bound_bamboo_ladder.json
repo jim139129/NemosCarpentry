@@ -13,7 +13,7 @@
     },
     "has_the_recipe": {
       "conditions": {
-        "recipe": "nemos-carpentry:bound_bamboo_ladder"
+        "recipes": "nemos-carpentry:bound_bamboo_ladder"
       },
       "trigger": "minecraft:recipe_unlocked"
     }

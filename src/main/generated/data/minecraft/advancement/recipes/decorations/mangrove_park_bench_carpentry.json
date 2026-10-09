@@ -13,7 +13,7 @@
     },
     "has_the_recipe": {
       "conditions": {
-        "recipe": "minecraft:mangrove_park_bench_carpentry"
+        "recipes": "minecraft:mangrove_park_bench_carpentry"
       },
       "trigger": "minecraft:recipe_unlocked"
     }

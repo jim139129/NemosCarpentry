@@ -13,7 +13,7 @@
     },
     "has_the_recipe": {
       "conditions": {
-        "recipe": "minecraft:bamboo_ladder_carpentry"
+        "recipes": "minecraft:bamboo_ladder_carpentry"
       },
       "trigger": "minecraft:recipe_unlocked"
     }

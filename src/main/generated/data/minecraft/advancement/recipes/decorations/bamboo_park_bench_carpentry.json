@@ -13,7 +13,7 @@
     },
     "has_the_recipe": {
       "conditions": {
-        "recipe": "minecraft:bamboo_park_bench_carpentry"
+        "recipes": "minecraft:bamboo_park_bench_carpentry"
       },
       "trigger": "minecraft:recipe_unlocked"
     }

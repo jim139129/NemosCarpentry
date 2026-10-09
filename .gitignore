@@ -42,3 +42,6 @@ replay_*.log
 #misc
 
 src/main/generated/.cache
+
+# local migration notes
+/docs/

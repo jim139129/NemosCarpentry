@@ -13,7 +13,7 @@
     },
     "has_the_recipe": {
       "conditions": {
-        "recipe": "minecraft:jungle_park_bench_carpentry"
+        "recipes": "minecraft:jungle_park_bench_carpentry"
       },
       "trigger": "minecraft:recipe_unlocked"
     }
